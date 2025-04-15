@@ -18,7 +18,7 @@ import (
 	"bufio"//lectura del buffer
 	"os"//entrada 
 	"fmt"//imprimir
-	// "strconv"// parsear
+	"strconv"// parsear
 	"strings" //manejo de cadenas
 )
 
@@ -67,21 +67,29 @@ func main(){
 		case "1":
 			// código para "a"
 			fmt.Println("Ingrese la temperatura en °C");
+			valorString, _ := lector.ReadString('\n');
+			floatVal, _ := strconv.ParseFloat(strings.TrimSpace(valorString), 64)
+			fmt.Println("conversion celsius a fahrenheit:", conversionCelsiusFahrenheit(floatVal));
+			break;
 		case "2":
 			// código para "b"
 			fmt.Println("Ingrese la temperatura en °F");
+			valorString, _ := lector.ReadString('\n');
+			floatVal, _ := strconv.ParseFloat(strings.TrimSpace(valorString), 64)
+			fmt.Println("conversion fahrenheit a celsius:",conversionFahrenheitCelsius (floatVal));
 		default:
 			fmt.Println("En caso de salir presionar 'c'")
 		}
-
+		fmt.Println("En caso de salir presionar 'c'. Enter para continuar");
 		b, _ = lector.ReadString('\n');
 		b = strings.TrimSpace(b);
 	}
 }
-// func conversionCelsiusFahrenheit(celsius float64) float64{
-// 	return celsius * 9/5 + 32;
-// }
+func conversionCelsiusFahrenheit(celsius float64) float64{
+	return celsius * 9/5 + 32;
+}
 
-// func conversionFahrenheitCelsius(fahrenheit float64) float64{
-// 	return (fahrenheit - 32) * 5/9;
-// }
+func conversionFahrenheitCelsius(fahrenheit float64) float64{
+	return (fahrenheit - 32) * 5/9;
+}
+
