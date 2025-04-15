@@ -19,9 +19,10 @@ import (
 
 func main() {
 
-	var slice = []int {1,2,3,4};
+	var slice = []int {1,2,3,4,18};
 	sumar:= SumarPares(slice);
 	fmt.Println("El valor de la suma de pares es:",sumar);
+	//paso las pruebas
 }
 
 func SumarPares	(a []int )int{
