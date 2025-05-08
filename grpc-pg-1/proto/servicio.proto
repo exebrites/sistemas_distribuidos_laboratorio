@@ -1,0 +1,12 @@
+syntax = "proto3";
+package servicio;
+option go_package = "./proto";
+service Servicio {
+rpc Hola (Requerimiento) returns (Respuesta);
+}
+message Requerimiento {
+string nombre = 1;
+}
+message Respuesta {
+string mensaje = 1;
+}
