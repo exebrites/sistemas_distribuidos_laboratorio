@@ -10,3 +10,23 @@ string nombre = 1;
 message Respuesta {
 string mensaje = 1;
 }
+
+
+service SaludoService {
+  rpc Saludar(Saludo) returns (Respuesta);
+  rpc ListadoPersonas(Vacio) returns (Lista);
+}
+
+message Saludo {
+  string nombre = 1;
+}
+
+message Respuesta {
+  string mensaje = 1;
+}
+
+message Vacio {}
+
+message Lista {
+  repeated string personas = 1;
+}
