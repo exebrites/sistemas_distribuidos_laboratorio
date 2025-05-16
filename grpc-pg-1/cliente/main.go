@@ -29,21 +29,22 @@ func main() {
 	// Cerramos el contexto al finalizar el programa
 	defer cancel()
 
-	fmt.Println("Menu:")
-	fmt.Println("1. Saludar a Claudio")
-	fmt.Println("2. Saludar a varias personas")
-	var opcion int
-	fmt.Print("Ingrese la opcion: ")
-	fmt.Scanln(&opcion)
-	switch opcion {
-	case 1:
-		saludarAClaudio(ctx, conn)
-	case 2:
-		llamarPersonas(ctx, conn)
-	default:
-		fmt.Println("Opcion no valida")
-		return
-	}
+	llamarPersonas(ctx, conn)
+	// fmt.Println("Menu:")
+	// fmt.Println("1. Saludar a Claudio")
+	// fmt.Println("2. Saludar a varias personas")
+	// var opcion int
+	// fmt.Print("Ingrese la opcion: ")
+	// fmt.Scanln(&opcion)
+	// switch opcion {
+	// case 1:
+	// 	saludarAClaudio(ctx, conn)
+	// case 2:
+
+	// default:
+	// 	fmt.Println("Opcion no valida")
+	// 	return
+	// }
 }
 
 // saludarAClaudio llama al metodo Hola del servicio con el nombre "Claudio" y
@@ -65,7 +66,7 @@ func saludarAClaudio(ctx context.Context, conn *grpc.ClientConn) {
 func llamarPersonas(ctx context.Context, conn *grpc.ClientConn) {
 	cSaludoServicio := proto.NewSaludoServiceClient(conn)
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
