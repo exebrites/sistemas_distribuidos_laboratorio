@@ -65,6 +65,50 @@ func (x *Requerimiento) GetNombre() string {
 	return ""
 }
 
+type Saludo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Nombre        string                 `protobuf:"bytes,1,opt,name=nombre,proto3" json:"nombre,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Saludo) Reset() {
+	*x = Saludo{}
+	mi := &file_proto_servicio_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Saludo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Saludo) ProtoMessage() {}
+
+func (x *Saludo) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_servicio_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Saludo.ProtoReflect.Descriptor instead.
+func (*Saludo) Descriptor() ([]byte, []int) {
+	return file_proto_servicio_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Saludo) GetNombre() string {
+	if x != nil {
+		return x.Nombre
+	}
+	return ""
+}
+
 type Respuesta struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Mensaje       string                 `protobuf:"bytes,1,opt,name=mensaje,proto3" json:"mensaje,omitempty"`
@@ -74,7 +118,7 @@ type Respuesta struct {
 
 func (x *Respuesta) Reset() {
 	*x = Respuesta{}
-	mi := &file_proto_servicio_proto_msgTypes[1]
+	mi := &file_proto_servicio_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -86,7 +130,7 @@ func (x *Respuesta) String() string {
 func (*Respuesta) ProtoMessage() {}
 
 func (x *Respuesta) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_servicio_proto_msgTypes[1]
+	mi := &file_proto_servicio_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -99,7 +143,7 @@ func (x *Respuesta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Respuesta.ProtoReflect.Descriptor instead.
 func (*Respuesta) Descriptor() ([]byte, []int) {
-	return file_proto_servicio_proto_rawDescGZIP(), []int{1}
+	return file_proto_servicio_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Respuesta) GetMensaje() string {
@@ -109,17 +153,105 @@ func (x *Respuesta) GetMensaje() string {
 	return ""
 }
 
+type Vacio struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Vacio) Reset() {
+	*x = Vacio{}
+	mi := &file_proto_servicio_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Vacio) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Vacio) ProtoMessage() {}
+
+func (x *Vacio) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_servicio_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Vacio.ProtoReflect.Descriptor instead.
+func (*Vacio) Descriptor() ([]byte, []int) {
+	return file_proto_servicio_proto_rawDescGZIP(), []int{3}
+}
+
+type Lista struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Personas      []string               `protobuf:"bytes,1,rep,name=personas,proto3" json:"personas,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Lista) Reset() {
+	*x = Lista{}
+	mi := &file_proto_servicio_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Lista) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Lista) ProtoMessage() {}
+
+func (x *Lista) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_servicio_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Lista.ProtoReflect.Descriptor instead.
+func (*Lista) Descriptor() ([]byte, []int) {
+	return file_proto_servicio_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Lista) GetPersonas() []string {
+	if x != nil {
+		return x.Personas
+	}
+	return nil
+}
+
 var File_proto_servicio_proto protoreflect.FileDescriptor
 
 const file_proto_servicio_proto_rawDesc = "" +
 	"\n" +
 	"\x14proto/servicio.proto\x12\bservicio\"'\n" +
 	"\rRequerimiento\x12\x16\n" +
+	"\x06nombre\x18\x01 \x01(\tR\x06nombre\" \n" +
+	"\x06Saludo\x12\x16\n" +
 	"\x06nombre\x18\x01 \x01(\tR\x06nombre\"%\n" +
 	"\tRespuesta\x12\x18\n" +
-	"\amensaje\x18\x01 \x01(\tR\amensaje2@\n" +
+	"\amensaje\x18\x01 \x01(\tR\amensaje\"\a\n" +
+	"\x05Vacio\"#\n" +
+	"\x05Lista\x12\x1a\n" +
+	"\bpersonas\x18\x01 \x03(\tR\bpersonas2@\n" +
 	"\bServicio\x124\n" +
-	"\x04Hola\x12\x17.servicio.Requerimiento\x1a\x13.servicio.RespuestaB\tZ\a./protob\x06proto3"
+	"\x04Hola\x12\x17.servicio.Requerimiento\x1a\x13.servicio.Respuesta2v\n" +
+	"\rSaludoService\x120\n" +
+	"\aSaludar\x12\x10.servicio.Saludo\x1a\x13.servicio.Respuesta\x123\n" +
+	"\x0fListadoPersonas\x12\x0f.servicio.Vacio\x1a\x0f.servicio.ListaB\tZ\a./protob\x06proto3"
 
 var (
 	file_proto_servicio_proto_rawDescOnce sync.Once
@@ -133,16 +265,23 @@ func file_proto_servicio_proto_rawDescGZIP() []byte {
 	return file_proto_servicio_proto_rawDescData
 }
 
-var file_proto_servicio_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_proto_servicio_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_proto_servicio_proto_goTypes = []any{
 	(*Requerimiento)(nil), // 0: servicio.Requerimiento
-	(*Respuesta)(nil),     // 1: servicio.Respuesta
+	(*Saludo)(nil),        // 1: servicio.Saludo
+	(*Respuesta)(nil),     // 2: servicio.Respuesta
+	(*Vacio)(nil),         // 3: servicio.Vacio
+	(*Lista)(nil),         // 4: servicio.Lista
 }
 var file_proto_servicio_proto_depIdxs = []int32{
 	0, // 0: servicio.Servicio.Hola:input_type -> servicio.Requerimiento
-	1, // 1: servicio.Servicio.Hola:output_type -> servicio.Respuesta
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	1, // 1: servicio.SaludoService.Saludar:input_type -> servicio.Saludo
+	3, // 2: servicio.SaludoService.ListadoPersonas:input_type -> servicio.Vacio
+	2, // 3: servicio.Servicio.Hola:output_type -> servicio.Respuesta
+	2, // 4: servicio.SaludoService.Saludar:output_type -> servicio.Respuesta
+	4, // 5: servicio.SaludoService.ListadoPersonas:output_type -> servicio.Lista
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -159,9 +298,9 @@ func file_proto_servicio_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_servicio_proto_rawDesc), len(file_proto_servicio_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   5,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_proto_servicio_proto_goTypes,
 		DependencyIndexes: file_proto_servicio_proto_depIdxs,

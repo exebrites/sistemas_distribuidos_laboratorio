@@ -2,31 +2,23 @@ syntax = "proto3";
 package servicio;
 option go_package = "./proto";
 service Servicio {
-rpc Hola (Requerimiento) returns (Respuesta);
+  rpc Hola (Requerimiento) returns (Respuesta);
 }
-message Requerimiento {
-string nombre = 1;
-}
-message Respuesta {
-string mensaje = 1;
-}
-
-
 service SaludoService {
   rpc Saludar(Saludo) returns (Respuesta);
   rpc ListadoPersonas(Vacio) returns (Lista);
 }
-
+message Requerimiento {
+  string nombre = 1;
+}
 message Saludo {
   string nombre = 1;
 }
-
 message Respuesta {
   string mensaje = 1;
 }
-
 message Vacio {}
-
 message Lista {
   repeated string personas = 1;
 }
+

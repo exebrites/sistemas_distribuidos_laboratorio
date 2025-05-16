@@ -119,3 +119,143 @@ var Servicio_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/servicio.proto",
 }
+
+const (
+	SaludoService_Saludar_FullMethodName         = "/servicio.SaludoService/Saludar"
+	SaludoService_ListadoPersonas_FullMethodName = "/servicio.SaludoService/ListadoPersonas"
+)
+
+// SaludoServiceClient is the client API for SaludoService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type SaludoServiceClient interface {
+	Saludar(ctx context.Context, in *Saludo, opts ...grpc.CallOption) (*Respuesta, error)
+	ListadoPersonas(ctx context.Context, in *Vacio, opts ...grpc.CallOption) (*Lista, error)
+}
+
+type saludoServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSaludoServiceClient(cc grpc.ClientConnInterface) SaludoServiceClient {
+	return &saludoServiceClient{cc}
+}
+
+func (c *saludoServiceClient) Saludar(ctx context.Context, in *Saludo, opts ...grpc.CallOption) (*Respuesta, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Respuesta)
+	err := c.cc.Invoke(ctx, SaludoService_Saludar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *saludoServiceClient) ListadoPersonas(ctx context.Context, in *Vacio, opts ...grpc.CallOption) (*Lista, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Lista)
+	err := c.cc.Invoke(ctx, SaludoService_ListadoPersonas_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SaludoServiceServer is the server API for SaludoService service.
+// All implementations must embed UnimplementedSaludoServiceServer
+// for forward compatibility.
+type SaludoServiceServer interface {
+	Saludar(context.Context, *Saludo) (*Respuesta, error)
+	ListadoPersonas(context.Context, *Vacio) (*Lista, error)
+	mustEmbedUnimplementedSaludoServiceServer()
+}
+
+// UnimplementedSaludoServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedSaludoServiceServer struct{}
+
+func (UnimplementedSaludoServiceServer) Saludar(context.Context, *Saludo) (*Respuesta, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Saludar not implemented")
+}
+func (UnimplementedSaludoServiceServer) ListadoPersonas(context.Context, *Vacio) (*Lista, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListadoPersonas not implemented")
+}
+func (UnimplementedSaludoServiceServer) mustEmbedUnimplementedSaludoServiceServer() {}
+func (UnimplementedSaludoServiceServer) testEmbeddedByValue()                       {}
+
+// UnsafeSaludoServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SaludoServiceServer will
+// result in compilation errors.
+type UnsafeSaludoServiceServer interface {
+	mustEmbedUnimplementedSaludoServiceServer()
+}
+
+func RegisterSaludoServiceServer(s grpc.ServiceRegistrar, srv SaludoServiceServer) {
+	// If the following call pancis, it indicates UnimplementedSaludoServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&SaludoService_ServiceDesc, srv)
+}
+
+func _SaludoService_Saludar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Saludo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SaludoServiceServer).Saludar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SaludoService_Saludar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SaludoServiceServer).Saludar(ctx, req.(*Saludo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SaludoService_ListadoPersonas_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Vacio)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SaludoServiceServer).ListadoPersonas(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SaludoService_ListadoPersonas_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SaludoServiceServer).ListadoPersonas(ctx, req.(*Vacio))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SaludoService_ServiceDesc is the grpc.ServiceDesc for SaludoService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SaludoService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "servicio.SaludoService",
+	HandlerType: (*SaludoServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Saludar",
+			Handler:    _SaludoService_Saludar_Handler,
+		},
+		{
+			MethodName: "ListadoPersonas",
+			Handler:    _SaludoService_ListadoPersonas_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto/servicio.proto",
+}
