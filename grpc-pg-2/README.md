@@ -1,4 +1,4 @@
-# grpc-pg-1-grupo01
+# grpc-pg-2-grupo01
 
 ## Integrantes
 - Exequiel Brites
