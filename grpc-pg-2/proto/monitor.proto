@@ -1,0 +1,18 @@
+syntax = "proto3"; 
+ 
+package monitor; 
+ 
+option go_package = "./proto"; 
+ 
+service Monitor { 
+  rpc EnviarHeartbeat(stream Heartbeat) returns (Ack); 
+} 
+ 
+message Heartbeat { 
+  string nodoId = 1; 
+  int64 marcaTiempo = 2; 
+} 
+ 
+message Ack { 
+  string mensaje = 1; 
+}
