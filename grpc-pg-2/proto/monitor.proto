@@ -5,14 +5,16 @@ package monitor;
 option go_package = "./proto"; 
  
 service Monitor { 
+  // Método del servicio: recibe muchos heartbeats por un stream
+  // y al final devuelve un mensaje de confirmación (Ack)
   rpc EnviarHeartbeat(stream Heartbeat) returns (Ack); 
 } 
  
 message Heartbeat { 
-  string nodoId = 1; 
-  int64 marcaTiempo = 2; 
+  string nodoId = 1; // Identificador del nodo que manda el heartbeat
+  int64 marcaTiempo = 2; // Hora (Unix timestamp) del envío
 } 
  
 message Ack { 
-  string mensaje = 1; 
+  string mensaje = 1; // Mensaje simple de respuesta
 }
