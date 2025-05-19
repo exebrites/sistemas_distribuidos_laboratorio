@@ -31,7 +31,7 @@ func (s *servidor) EnviarHeartbeat(stream proto.Monitor_EnviarHeartbeatServer) e
 			return stream.SendAndClose(&proto.Ack{Mensaje: "Stream cerrado"})
 		}
 		if err != nil {
-			log.Printf("Error en stream: %v", err)
+			//log.Printf("Error en stream: %v", err)
 			return err
 		}
 
@@ -39,7 +39,7 @@ func (s *servidor) EnviarHeartbeat(stream proto.Monitor_EnviarHeartbeatServer) e
 		s.mu.Lock()
 		s.ultimaVista[nodoId] = time.Unix(hb.MarcaTiempo, 0) // Guarda la marca de tiempo
 		s.mu.Unlock()
-		log.Printf("[HEARTBEAT] %v %v", nodoId, hb.MarcaTiempo)
+		//log.Printf("[HEARTBEAT] %v %v", nodoId, hb.MarcaTiempo)
 	}
 }
 
@@ -49,12 +49,18 @@ func (s *servidor) detectorFallas(intervalo time.Duration) {
 		time.Sleep(intervalo)
 		s.mu.Lock()
 		ahora := time.Now()
+		fmt.Println("---- Estado de nodos ----")
 		for nodo, ultimo := range s.ultimaVista {
 			// Si hace más de 3 veces el intervalo sin ver al nodo → falla
 			if ahora.Sub(ultimo) > 3*intervalo {
-				log.Printf("Fallo en Nodo %v inactivo desde hace %.0fs", nodo, ahora.Sub(ultimo).Seconds())
+				//log.Printf("Fallo en Nodo %v inactivo desde hace %.0fs", nodo, ahora.Sub(ultimo).Seconds())
+				fmt.Printf("Nodo %v: Inactivo (último hace %.0fs)\n", nodo, ahora.Sub(ultimo).Seconds())
+			} else {
+				fmt.Printf("Nodo %v: Activo (último hace %.0fs)\n", nodo, ahora.Sub(ultimo).Seconds())
 			}
 		}
+		fmt.Println("--------------------------")
+
 		s.mu.Unlock()
 	}
 }

@@ -23,8 +23,8 @@ const (
 
 type Heartbeat struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	NodoId        string                 `protobuf:"bytes,1,opt,name=nodoId,proto3" json:"nodoId,omitempty"`
-	MarcaTiempo   int64                  `protobuf:"varint,2,opt,name=marcaTiempo,proto3" json:"marcaTiempo,omitempty"`
+	NodoId        string                 `protobuf:"bytes,1,opt,name=nodoId,proto3" json:"nodoId,omitempty"`            // Identificador del nodo que manda el heartbeat
+	MarcaTiempo   int64                  `protobuf:"varint,2,opt,name=marcaTiempo,proto3" json:"marcaTiempo,omitempty"` // Hora (Unix timestamp) del envío
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -75,7 +75,7 @@ func (x *Heartbeat) GetMarcaTiempo() int64 {
 
 type Ack struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Mensaje       string                 `protobuf:"bytes,1,opt,name=mensaje,proto3" json:"mensaje,omitempty"`
+	Mensaje       string                 `protobuf:"bytes,1,opt,name=mensaje,proto3" json:"mensaje,omitempty"` // Mensaje simple de respuesta
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

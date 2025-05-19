@@ -26,6 +26,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MonitorClient interface {
+	// Método del servicio: recibe muchos heartbeats por un stream
+	// y al final devuelve un mensaje de confirmación (Ack)
 	EnviarHeartbeat(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Heartbeat, Ack], error)
 }
 
@@ -54,6 +56,8 @@ type Monitor_EnviarHeartbeatClient = grpc.ClientStreamingClient[Heartbeat, Ack]
 // All implementations must embed UnimplementedMonitorServer
 // for forward compatibility.
 type MonitorServer interface {
+	// Método del servicio: recibe muchos heartbeats por un stream
+	// y al final devuelve un mensaje de confirmación (Ack)
 	EnviarHeartbeat(grpc.ClientStreamingServer[Heartbeat, Ack]) error
 	mustEmbedUnimplementedMonitorServer()
 }
