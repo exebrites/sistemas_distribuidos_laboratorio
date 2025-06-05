@@ -8,3 +8,4 @@
 - Brites Exequiel
 - DaSilva Marcos N.
 - Ramos Federico J.
+- Schiaffino Alejandro Thiago
