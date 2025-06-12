@@ -1,0 +1,89 @@
+syntax = "proto3";
+package kv;
+
+// El paquete Go donde se generaran los stubs:
+option go_package = "./proto";
+
+// ------------------------
+// 1) Mensajes Cliente <-> Coordinador
+// ------------------------
+
+// Solicitud para Obtener valor segun una clave.
+message SolicitudObtener {
+    string clave = 1;
+}
+
+// Respuesta de Obtener: contiene valor (bytes), reloj vectorial y flag existe.
+message RespuestaObtener {
+    bytes valor = 1;
+    bytes relojVector = 2; // Reloj vectorial serializado
+    bool existe = 3;
+}
+
+// Solicitud para Guardar (clave, valor).
+// El campo relojVector solo se usa si el cliente trae su propio vector;
+// puede quedar vacio.
+message SolicitudGuardar {
+    string clave = 1;
+    bytes valor = 2;
+    bytes relojVector = 3;
+}
+
+// Respuesta de Guardar: exito y el nuevo reloj vectorial de la replica primaria.
+message RespuestaGuardar {
+    bool exito = 1;
+    bytes nuevoRelojVector = 2;
+}
+
+// Solicitud para Eliminar una clave.
+message SolicitudEliminar {
+    string clave = 1;
+    bytes relojVector = 2;
+}
+
+// Respuesta de Eliminar: exito y nuevo reloj vectorial.
+message RespuestaEliminar {
+    bool exito = 1;
+    bytes nuevoRelojVector = 2;
+}
+
+// ------------------------
+// 2) Servicio Coordinador
+// ------------------------
+service Coordinador {
+    rpc Obtener (SolicitudObtener) returns (RespuestaObtener) {}
+    rpc Guardar (SolicitudGuardar) returns (RespuestaGuardar) {}
+    rpc Eliminar (SolicitudEliminar) returns (RespuestaEliminar) {}
+}
+
+// ------------------------
+// 3) Mensajes y servicio para replicacion interna
+// ------------------------
+
+// Tipo de mutacion: GUARDAR o ELIMINAR.
+message Mutacion {
+    enum Tipo {
+        GUARDAR = 0;
+        ELIMINAR = 1;
+    }
+    Tipo tipo = 1;
+    string clave = 2;
+    bytes valor = 3;    // Solo para Guardar
+    bytes relojVector = 4;  // Reloj vectorial que asigna la replica origen
+}
+
+// Reconocimiento que envia la replica destino
+message Reconocimiento {
+    bool ok = 1;
+    bytes relojVectorAck = 2; // Reloj vectorial actualizado de la replica destino
+}
+
+// Servicio que expone cada Replica para recibir mutaciones
+service Replica {
+    rpc ReplicarMutacion (Mutacion) returns (Reconocimiento) {}
+
+    // Metodos locales para que el Coordinador invoque
+    rpc ObtenerLocal (SolicitudObtener) returns (RespuestaObtener) {}
+    rpc GuardarLocal (SolicitudGuardar) returns (RespuestaGuardar) {}
+    rpc EliminarLocal (SolicitudEliminar) returns (RespuestaEliminar) {}
+}
