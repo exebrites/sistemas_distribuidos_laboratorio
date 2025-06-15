@@ -84,11 +84,6 @@ go run coordinador/servidor_coordinador.go -listen :6000 :50051 :50052 :50053
 go run cliente/cliente_ejemplo.go
 ```
 
-<br>  
-
-## Pruebas y Ejemplos
-Para probar el sistema, puedes ejecutar el cliente de ejemplo y verificar que se almacenan los datos correctamente en las replicas. 
-
 La salida esperada es la siguiente:
 
 ```bash
@@ -106,7 +101,7 @@ Eliminación exitosa
 Eliminación verificada correctamente
 ```
 
-### Prueba de conflicto:
+### Paso4 - Prueba de conflicto
 También se puede ejecutar el cliente de conflicto para simular un escenario de conflicto entre replicas, haciendo la ejecución de los clientes de conflicto en terminales separadas.  
 
 **Comandos de ejecución**: 
