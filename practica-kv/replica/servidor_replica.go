@@ -26,6 +26,8 @@ const (
     colorGreen  = "\033[32m"
     colorYellow = "\033[33m"
     colorBlue   = "\033[34m"
+    colorPurple = "\033[35m"
+    colorCyan   = "\033[36m"
 )
 
 
@@ -227,21 +229,57 @@ func (r *ServidorReplica) ObtenerLocal(ctx context.Context, req *pb.SolicitudObt
 
 
 func (r *ServidorReplica) ReplicarMutacion(ctx context.Context, m *pb.Mutacion) (*pb.Reconocimiento, error) {
-    
-    // Parte del paso8: Verificar si la clave existe en el almacén
-    log.Printf("%sRéplica %d - Recibida mutación: Tipo: %v, Clave: %s, Reloj remoto: %v, Reloj local: %v%s",
-    colorYellow, r.idReplica, m.Tipo, m.Clave, decodeVector(m.RelojVector), r.relojVector, colorReset)
-    
+    // Log de recepción inicial
+    log.Printf("%sRéplica %d - Recibida mutación: Tipo: %v, Clave: %s, Reloj remoto: %v%s", 
+        colorYellow, r.idReplica, m.Tipo, m.Clave, decodeVector(m.RelojVector), colorReset)
 
-    
     r.mu.Lock()
     defer r.mu.Unlock()
 
     relojRemoto := decodeVector(m.RelojVector)
     valorLocal, existe := r.almacen[m.Clave]
 
+    // Log del estado actual antes de procesar
+    if existe {
+        log.Printf("%sRéplica %d - Estado actual - Clave: %s, Valor: %s, Reloj local: %v%s",
+            colorCyan, r.idReplica, m.Clave, string(valorLocal.Valor), valorLocal.RelojVector, colorReset)
+    } else {
+        log.Printf("%sRéplica %d - Clave %s no existe localmente%s",
+            colorCyan, r.idReplica, m.Clave, colorReset)
+    }
+
     // Determinar si debemos aplicar la mutación
-    aplicar := !existe || valorLocal.RelojVector.AntesDe(relojRemoto)
+    aplicar := false
+
+    if !existe {
+        aplicar = true
+        log.Printf("%sRéplica %d - Aplicando mutación (clave nueva)%s",
+            colorGreen, r.idReplica, colorReset)
+    } else {
+        if valorLocal.RelojVector.AntesDe(relojRemoto) {
+            aplicar = true
+            log.Printf("%sRéplica %d - Aplicando mutación (reloj remoto más nuevo)%s",
+                colorGreen, r.idReplica, colorReset)
+        } else if relojRemoto.AntesDe(valorLocal.RelojVector) {
+            log.Printf("%sRéplica %d - Ignorando mutación (ya tenemos versión más reciente)%s",
+                colorPurple, r.idReplica, colorReset)
+        } else {
+            // Conflicto de versiones concurrentes
+            log.Printf("%sRéplica %d - CONFLICTO DETECTADO! Reloj local: %v, Reloj remoto: %v%s",
+                colorRed, r.idReplica, valorLocal.RelojVector, relojRemoto, colorReset)
+            
+            // Política de resolución alternativa: comparar valores de reloj
+            // Gana la mutación con mayor componente en la posición de la réplica actual
+            if relojRemoto[r.idReplica] > valorLocal.RelojVector[r.idReplica] {
+                aplicar = true
+                log.Printf("%sRéplica %d - Resolución: Aceptando versión remota (mayor componente local)%s",
+                    colorRed, r.idReplica, colorReset)
+            } else {
+                log.Printf("%sRéplica %d - Resolución: Conservando versión local%s",
+                    colorRed, r.idReplica, colorReset)
+            }
+        }
+    }
 
     if aplicar {
         // Fusionar relojes primero
@@ -253,17 +291,19 @@ func (r *ServidorReplica) ReplicarMutacion(ctx context.Context, m *pb.Mutacion) 
                 Valor:       m.Valor,
                 RelojVector: relojRemoto,
             }
+            log.Printf("%sRéplica %d - GUARDADO - Clave: %s, Valor: %s, Reloj: %v%s",
+                colorBlue, r.idReplica, m.Clave, m.Valor, relojRemoto, colorReset)
         } else {
             delete(r.almacen, m.Clave)
+            log.Printf("%sRéplica %d - ELIMINADO - Clave: %s%s",
+                colorBlue, r.idReplica, m.Clave, colorReset)
         }
 
-        
-        // Parte del paso8: Log de mutación aplicación 
-        log.Printf("%sRéplica %d - Mutación aplicada. Nuevo reloj: %v%s", colorBlue, r.idReplica, r.relojVector, colorReset)
-
-        
         // Incrementar nuestro reloj después de aplicar cambios
         r.relojVector.Incrementar(r.idReplica)
+        
+        log.Printf("%sRéplica %d - Nuevo reloj vectorial: %v%s",
+            colorBlue, r.idReplica, r.relojVector, colorReset)
     }
 
     return &pb.Reconocimiento{
