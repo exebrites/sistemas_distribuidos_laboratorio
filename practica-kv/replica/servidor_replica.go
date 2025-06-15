@@ -19,6 +19,15 @@ import (
     pb "practica-kv/proto" // Ajusta esta ruta
 )
  
+//Parte del paso8
+const (
+    colorReset  = "\033[0m"
+    colorRed    = "\033[31m"
+    colorGreen  = "\033[32m"
+    colorYellow = "\033[33m"
+    colorBlue   = "\033[34m"
+)
+
 
 // VectorReloj representa un reloj vectorial de longitud 3 (tres réplicas).
  type VectorReloj [3]uint64 
@@ -86,6 +95,12 @@ func (r *ServidorReplica) GuardarLocal(ctx context.Context, req *pb.SolicitudGua
         Valor:       req.Valor,
         RelojVector: r.relojVector,
     }
+
+
+    // Parte del paso8
+    log.Printf("%sRéplica %d - GUARDAR clave: %s, valor: %s, reloj: %v%s", 
+    colorGreen, r.idReplica, req.Clave, req.Valor, r.relojVector, colorReset)
+
 
     // 4. Preparar mutación para replicación
     mutacion := &pb.Mutacion{
@@ -212,6 +227,13 @@ func (r *ServidorReplica) ObtenerLocal(ctx context.Context, req *pb.SolicitudObt
 
 
 func (r *ServidorReplica) ReplicarMutacion(ctx context.Context, m *pb.Mutacion) (*pb.Reconocimiento, error) {
+    
+    // Parte del paso8: Verificar si la clave existe en el almacén
+    log.Printf("%sRéplica %d - Recibida mutación: Tipo: %v, Clave: %s, Reloj remoto: %v, Reloj local: %v%s",
+    colorYellow, r.idReplica, m.Tipo, m.Clave, decodeVector(m.RelojVector), r.relojVector, colorReset)
+    
+
+    
     r.mu.Lock()
     defer r.mu.Unlock()
 
@@ -234,6 +256,11 @@ func (r *ServidorReplica) ReplicarMutacion(ctx context.Context, m *pb.Mutacion) 
         } else {
             delete(r.almacen, m.Clave)
         }
+
+        
+        // Parte del paso8: Log de mutación aplicación 
+        log.Printf("%sRéplica %d - Mutación aplicada. Nuevo reloj: %v%s", colorBlue, r.idReplica, r.relojVector, colorReset)
+
         
         // Incrementar nuestro reloj después de aplicar cambios
         r.relojVector.Incrementar(r.idReplica)
