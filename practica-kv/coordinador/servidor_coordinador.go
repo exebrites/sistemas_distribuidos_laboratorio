@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"sync/atomic"
 
-	"google.golang.org/grpc"
 	pb "practica-kv/proto" // Asegúrate que esta ruta coincida con tu módulo
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // ServidorCoordinador implementa pb.CoordinadorServer.
@@ -40,45 +43,58 @@ func (c *ServidorCoordinador) elegirReplicaParaLectura() string {
 
 // Obtener: redirige petición de lectura a una réplica.
 func (c *ServidorCoordinador) Obtener(ctx context.Context, req *pb.SolicitudObtener) (*pb.RespuestaObtener, error) {
-	replicaAddr := c.elegirReplicaParaLectura()
-	
-	conn, err := grpc.Dial(replicaAddr, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
-	cliente := pb.NewReplicaClient(conn)
-	return cliente.ObtenerLocal(ctx, req)
+    replicaAddr := c.elegirReplicaParaLectura()
+    conn, err := grpc.NewClient(replicaAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+    if err != nil {
+        return nil, fmt.Errorf("no se pudo conectar a réplica: %v", err)
+    }
+    defer conn.Close()
+    
+    cliente := pb.NewReplicaClient(conn)
+    return cliente.ObtenerLocal(ctx, req)
 }
+
+
 
 // Guardar: redirige petición de escritura a una réplica elegida.
 func (c *ServidorCoordinador) Guardar(ctx context.Context, req *pb.SolicitudGuardar) (*pb.RespuestaGuardar, error) {
-	replicaAddr := c.elegirReplicaParaEscritura(req.Clave)
-	
-	conn, err := grpc.Dial(replicaAddr, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
+    replicaAddr := c.elegirReplicaParaEscritura(req.Clave)
+    
+    // Conexión actualizada usando NewClient y WithTransportCredentials
+    conn, err := grpc.NewClient(
+        replicaAddr,
+        grpc.WithTransportCredentials(insecure.NewCredentials()),
+    )
+    if err != nil {
+        return nil, fmt.Errorf("error al conectar con la réplica %s: %v", replicaAddr, err)
+    }
+    defer conn.Close()
 
-	cliente := pb.NewReplicaClient(conn)
-	return cliente.GuardarLocal(ctx, req)
+    cliente := pb.NewReplicaClient(conn)
+    return cliente.GuardarLocal(ctx, req)
 }
+
+
 
 // Eliminar: redirige petición de eliminación a una réplica elegida.
 func (c *ServidorCoordinador) Eliminar(ctx context.Context, req *pb.SolicitudEliminar) (*pb.RespuestaEliminar, error) {
-	replicaAddr := c.elegirReplicaParaEscritura(req.Clave)
-	
-	conn, err := grpc.Dial(replicaAddr, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
+    replicaAddr := c.elegirReplicaParaEscritura(req.Clave)
+    
+    // Conexión actualizada usando NewClient y WithTransportCredentials
+    conn, err := grpc.NewClient(
+        replicaAddr,
+        grpc.WithTransportCredentials(insecure.NewCredentials()),
+    )
+    if err != nil {
+        return nil, fmt.Errorf("error al conectar con la réplica %s: %v", replicaAddr, err)
+    }
+    defer conn.Close()
 
-	cliente := pb.NewReplicaClient(conn)
-	return cliente.EliminarLocal(ctx, req)
+    cliente := pb.NewReplicaClient(conn)
+    return cliente.EliminarLocal(ctx, req)
 }
+
+
 
 func main() {
 	// Definir bandera para la dirección de escucha del Coordinador.

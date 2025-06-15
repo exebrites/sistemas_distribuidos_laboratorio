@@ -14,6 +14,8 @@ import (
     "strconv"
     "syscall"
 
+    "google.golang.org/grpc/credentials/insecure"
+
     pb "practica-kv/proto" // Ajusta esta ruta
 )
  
@@ -45,80 +47,91 @@ type ServidorReplica struct {
 // peerAddrs: direcciones gRPC de los otros dos peers (ej.: []string{":50052", ":50053"})
 // NewServidorReplica crea una instancia de ServidorReplica
 func NewServidorReplica(idReplica int, peerAddrs []string) *ServidorReplica {
-	sr := &ServidorReplica{
-		almacen:      make(map[string]ValorConVersion),
-		idReplica:    idReplica,
-		relojVector:  VectorReloj{0, 0, 0},
-		clientesPeer: make([]pb.ReplicaClient, len(peerAddrs)),
-	}
+    sr := &ServidorReplica{
+        almacen:      make(map[string]ValorConVersion),
+        idReplica:    idReplica,
+        clientesPeer: make([]pb.ReplicaClient, len(peerAddrs)),
+    }
 
-	// Crear conexiones gRPC a los peers
-	for i, addr := range peerAddrs {
-		conn, err := grpc.Dial(addr, 
-			grpc.WithInsecure(),
-			grpc.WithTimeout(3*time.Second))
-		if err != nil {
-			log.Printf("No se pudo conectar a peer %s: %v", addr, err)
-			continue
-		}
-		sr.clientesPeer[i] = pb.NewReplicaClient(conn)
-	}
+    // Crear conexiones gRPC a los peers con el nuevo método
+    for i, addr := range peerAddrs {
+        conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+        if err != nil {
+            log.Fatalf("no se pudo conectar a peer %s: %v", addr, err)
+        }
+        sr.clientesPeer[i] = pb.NewReplicaClient(conn)
+    }
 
-	return sr
+    return sr
 }
 
 
 
 // GuardarLocal recibe la petición del Coordinador para almacenar clave/valor
 func (r *ServidorReplica) GuardarLocal(ctx context.Context, req *pb.SolicitudGuardar) (*pb.RespuestaGuardar, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+    r.mu.Lock()
+    defer r.mu.Unlock()
 
-	// 1. Incrementar nuestro componente del reloj vectorial
-	r.relojVector.Incrementar(r.idReplica)
+    // 1. Fusionar primero con reloj del cliente si existe
+    if len(req.RelojVector) > 0 {
+        relojCliente := decodeVector(req.RelojVector)
+        r.relojVector.Fusionar(relojCliente)
+    }
 
-	// 2. Fusionar con reloj del cliente si existe
-	if len(req.RelojVector) > 0 {
-		relojCliente := decodeVector(req.RelojVector)
-		r.relojVector.Fusionar(relojCliente)
-	}
+    // 2. Incrementar nuestro componente
+    r.relojVector.Incrementar(r.idReplica)
 
-	// 3. Guardar en el mapa local
-	r.almacen[req.Clave] = ValorConVersion{
-		Valor:       req.Valor,
-		RelojVector: r.relojVector,
-	}
+    // 3. Guardar en almacén local
+    r.almacen[req.Clave] = ValorConVersion{
+        Valor:       req.Valor,
+        RelojVector: r.relojVector,
+    }
 
-	// 4. Construir mutación para replicar a peers
-	mutacion := &pb.Mutacion{
-		Tipo:        pb.Mutacion_GUARDAR,
-		Clave:       req.Clave,
-		Valor:       req.Valor,
-		RelojVector: encodeVector(r.relojVector),
-	}
+    // 4. Preparar mutación para replicación
+    mutacion := &pb.Mutacion{
+        Tipo:        pb.Mutacion_GUARDAR,
+        Clave:       req.Clave,
+        Valor:       req.Valor,
+        RelojVector: encodeVector(r.relojVector),
+    }
 
-	// 5. Replicar asíncronamente a cada peer
-	go func() {
-		for i, peer := range r.clientesPeer {
-			if peer == nil {
-				continue // Saltar peers no conectados
-			}
-			
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			
-			_, err := peer.ReplicarMutacion(ctx, mutacion)
-			if err != nil {
-				log.Printf("Error replicando a peer %d: %v", i, err)
-			}
-		}
-	}()
+    // 5. Replicación síncrona con timeout
+    errCh := make(chan error, len(r.clientesPeer))
+    var wg sync.WaitGroup
 
-	// 6. Responder al Coordinador con el nuevo reloj vectorial
-	return &pb.RespuestaGuardar{
-		Exito:            true,
-		NuevoRelojVector: encodeVector(r.relojVector),
-	}, nil
+    for _, peer := range r.clientesPeer {
+        if peer == nil {
+            continue
+        }
+        wg.Add(1)
+        go func(p pb.ReplicaClient) {
+            defer wg.Done()
+            ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+            defer cancel()
+            _, err := p.ReplicarMutacion(ctx, mutacion)
+            if err != nil {
+                errCh <- err
+            }
+        }(peer)
+    }
+    wg.Wait()
+    close(errCh)
+
+    // Verificar errores de replicación
+    var errores []error
+    for err := range errCh {
+        errores = append(errores, err)
+    }
+
+    if len(errores) > 0 {
+        log.Printf("Errores en replicación: %v", errores)
+        // Considerar revertir la operación si es crítica
+    }
+
+    return &pb.RespuestaGuardar{
+        Exito:            true,
+        NuevoRelojVector: encodeVector(r.relojVector),
+    }, nil
 }
 
 
@@ -202,36 +215,28 @@ func (r *ServidorReplica) ReplicarMutacion(ctx context.Context, m *pb.Mutacion) 
     r.mu.Lock()
     defer r.mu.Unlock()
 
-    // 1. Decodificar el reloj vectorial de la mutación
     relojRemoto := decodeVector(m.RelojVector)
-    valorActual, existe := r.almacen[m.Clave]
+    valorLocal, existe := r.almacen[m.Clave]
 
-    // 2. Determinar si aplicar la mutación
-    aplicar := false
-    if !existe {
-        aplicar = true
-    } else {
-        relojLocal := valorActual.RelojVector
-        
-        if relojLocal.AntesDe(relojRemoto) {
-            aplicar = true
-        } else if !relojRemoto.AntesDe(relojLocal) {
-            // Conflicto concurrente - resolver
-            aplicar = r.resolverConflicto(m, &valorActual)
-        }
-    }
+    // Determinar si debemos aplicar la mutación
+    aplicar := !existe || valorLocal.RelojVector.AntesDe(relojRemoto)
 
-    // 3. Aplicar mutación si corresponde
     if aplicar {
+        // Fusionar relojes primero
+        r.relojVector.Fusionar(relojRemoto)
+        
+        // Aplicar mutación
         if m.Tipo == pb.Mutacion_GUARDAR {
             r.almacen[m.Clave] = ValorConVersion{
                 Valor:       m.Valor,
                 RelojVector: relojRemoto,
             }
-        } else { // ELIMINAR
+        } else {
             delete(r.almacen, m.Clave)
         }
-        r.relojVector.Fusionar(relojRemoto)
+        
+        // Incrementar nuestro reloj después de aplicar cambios
+        r.relojVector.Incrementar(r.idReplica)
     }
 
     return &pb.Reconocimiento{
@@ -239,6 +244,7 @@ func (r *ServidorReplica) ReplicarMutacion(ctx context.Context, m *pb.Mutacion) 
         RelojVectorAck: encodeVector(r.relojVector),
     }, nil
 }
+
 
 func (r *ServidorReplica) resolverConflicto(m *pb.Mutacion, local *ValorConVersion) bool {
     relojRemoto := decodeVector(m.RelojVector)
@@ -268,17 +274,30 @@ func (r *ServidorReplica) resolverConflicto(m *pb.Mutacion, local *ValorConVersi
 
 // Incrementar aumenta en 1 el componente correspondiente a la réplica que llama.
  func (vr *VectorReloj) Incrementar(idReplica int) { 
+    vr[idReplica]++
 } 
 
 // Fusionar toma el máximo elemento a elemento entre dos vectores.
  func (vr *VectorReloj) Fusionar(otro VectorReloj) { 
+    for i := 0; i < 3; i++ {
+        if otro[i] > vr[i] {
+            vr[i] = otro[i]
+        }
+    }
 } 
 
 // AntesDe devuelve true si vr < otro en el sentido estricto (strictly less).
  func (vr VectorReloj) AntesDe(otro VectorReloj) bool { 
-  menor := false 
-
-  return menor
+  menor := false
+    for i := 0; i < 3; i++ {
+        if vr[i] > otro[i] {
+            return false
+        }
+        if vr[i] < otro[i] {
+            menor = true
+        }
+    }
+    return menor
 }
 
 
